@@ -313,3 +313,26 @@ begin
   clear h6 hb, -- tidying up after ourselves for no apparent reason
   simpa [zero_add] using h8,
 end
+
+-- something we never used!
+/-- A sequence has at most one limit. -/
+theorem tendsto_unique (a : ℕ → ℝ) (s t : ℝ)
+  (hs : tendsto a s) (ht : tendsto a t) : s = t :=
+begin
+  by_contra hne,
+  wlog h : s < t, 
+  { rcases lt_trichotomy s t with (hst | rfl | hts),
+    { left, assumption },
+    { exact false.elim (hne rfl) },
+    { right, assumption } },
+  clear hne, -- have h now
+  let ε := (t - s) / 2,
+  have hεts : ε * 2 = t - s := by simp,
+  have hε : 0 < ε := div_pos (by linarith) zero_lt_two,
+  rcases hs ε hε with ⟨Bs, hs⟩,
+  rcases ht ε hε with ⟨Bt, ht⟩,
+  specialize hs (max Bs Bt) (le_max_left _ _),
+  specialize ht (max Bs Bt) (le_max_right _ _),
+  rw abs_lt at hs ht,
+  cases ht, cases hs, linarith,
+end

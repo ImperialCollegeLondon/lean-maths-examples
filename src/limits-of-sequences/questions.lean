@@ -189,3 +189,11 @@ theorem tendsto_mul (a b : ℕ → ℝ) (t u : ℝ) (ha : tendsto a t)
 begin
   sorry,
 end
+
+-- something we never used!
+/-- A sequence has at most one limit. -/
+theorem tendsto_unique (a : ℕ → ℝ) (s t : ℝ)
+  (hs : tendsto a s) (ht : tendsto a t) : s = t :=
+begin
+  sorry
+end

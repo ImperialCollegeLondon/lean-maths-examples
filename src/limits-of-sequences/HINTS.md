@@ -11,6 +11,8 @@ The usual ones in the natural number game (intro, exact, cases, split, rw etc)
 `convert` comes in handy a couple of times. If `h` and the goal are nearly but not quite definitionally equal,
 then `convert h` will spit out goals for where they differ.
 
+The `wlog` tactic is helpful for the final level.
+
 ## Library theorems used in the model answers
 
 It helps if you know the basic API for `abs`, a.k.a. `|x|`. Here are some examples.
@@ -39,7 +41,7 @@ For `tendsto_zero_mul_tendsto_zero` you can let one of the `ε`s be 1.
 For `tendsto_mul` the maths proof I formalised went via proving that `λ n, (a n - t) * (b n - u)`
 tended to zero first.
 
-
+For `tendto_unique` you need the killer epsilon for the contradiction. 
 
 
 

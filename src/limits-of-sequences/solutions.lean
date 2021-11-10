@@ -126,8 +126,7 @@ theorem tendsto_neg {a : ℕ → ℝ} {t : ℝ} (ha : tendsto a t) :
   tendsto (λ n, - a n) (-t) :=
 begin
   rw tendsto_def at *,
-  simp [abs_sub_comm] at *,
-  exact ha,
+  simpa [abs_sub_comm] using ha,
 end
 
 /-- If `a(n)` tends to `t` and `b(n)` tends to `u` then `a(n) + b(n)`
@@ -136,23 +135,22 @@ theorem tendsto_add {a b : ℕ → ℝ} {t u : ℝ}
   (ha : tendsto a t) (hb : tendsto b u) :
   tendsto (λ n, a n + b n) (t + u) :=
 begin
-  unfold tendsto,
   intros ε hε,
   specialize ha (ε/2) (by linarith),
   specialize hb (ε/2) (by linarith),
   cases ha with B₁ hB₁,
   cases hb with B₂ hB₂,
-  use max B₁ B₂,
+  use max B₁ B₂, -- Application of the `use` tactic often indicates an "idea" in a proof. 
   intros n hn,
   rw max_le_iff at hn,
   cases hn with hn₁ hn₂,
+  dsimp only, -- git rid of stupid lambda
   specialize hB₁ n hn₁,
   specialize hB₂ n hn₂,
   rw abs_lt at *,
   cases hB₁,
   cases hB₂,
-  split,
-  linarith,
+  split; -- semicolon means "do both goals with next tactic"
   linarith,
 end
 
@@ -161,23 +159,23 @@ tends to `t - u`. -/
 theorem tendsto_sub {a b : ℕ → ℝ} {t u : ℝ}
   (ha : tendsto a t) (hb : tendsto b u) :
   tendsto (λ n, a n - b n) (t - u) :=
-begin
-  exact tendsto_add ha (tendsto_neg hb),
-end
+tendsto_add ha (tendsto_neg hb) -- you could put `begin exact tendsto_add ... end` but this is quicker
+-- note also we are using the fact that `t - u` is *defined* to mean `t + -u`.
 
 /-- If `a(n)` tends to `t` then `37 * a(n)` tends to `37 * t`-/
 theorem tendsto_thirtyseven_mul (a : ℕ → ℝ) (t : ℝ) (h : tendsto a t) :
   tendsto (λ n, 37 * a n) (37 * t) :=
 begin
-  unfold tendsto at *,
   intros ε hε,
   specialize h (ε/37) (by linarith),
   cases h with B hB,
   use B,
   intros n hn,
   specialize hB n hn,
-  rw [← mul_sub, abs_mul, abs_of_nonneg],
-  linarith, norm_num,
+  -- now we have a tricky little inequality problem
+  rw [← mul_sub, abs_mul, abs_of_nonneg (show (0 : ℝ) ≤ 37, by norm_num)], -- now can treat |a n - t| as a constant
+  -- I found a lot of those rewrites by experimenting with `library_search`.
+  linarith,
 end
 
 /-- If `a(n)` tends to `t` and `c` is a positive constant then
@@ -185,16 +183,14 @@ end
 theorem tendsto_pos_const_mul {a : ℕ → ℝ} {t : ℝ} (h : tendsto a t)
   {c : ℝ} (hc : 0 < c) : tendsto (λ n, c * a n) (c * t) :=
 begin
-  unfold tendsto at *,
   intros ε hε,
   specialize h (ε/c) (div_pos hε hc),
   cases h with B hB,
   use B,
   intros n hn,
   specialize hB n hn,
-  rw [← mul_sub, abs_mul, abs_of_nonneg],
-  exact (lt_div_iff' hc).mp hB,
-  linarith,
+  rw [← mul_sub, abs_mul, abs_of_nonneg (show c ≥ 0, by linarith)],
+  exact (lt_div_iff' hc).mp hB, -- thanks library_search
 end
 
 /-- If `a(n)` tends to `t` and `c` is a negative constant then
@@ -202,16 +198,15 @@ end
 theorem tendsto_neg_const_mul {a : ℕ → ℝ} {t : ℝ} (h : tendsto a t)
   {c : ℝ} (hc : c < 0) : tendsto (λ n, c * a n) (c * t) :=
 begin
-  have hc' : 0 < -c,
-    exact neg_pos.mpr hc,
+  -- handy hypothesis 
+  have hc' : 0 < -c := neg_pos.mpr hc, -- thanks `library_search`
   intros ε hε,
-  specialize h ((ε/(-c))) _,
-  exact div_pos hε hc',
+  specialize h ((ε/(-c))) (div_pos hε hc'),
   cases h with B hB,
   use B,
   intros n hn,
   specialize hB n hn,
-  simp,
+  dsimp only, -- get rid of λ
   rw [← mul_sub, abs_mul, abs_of_neg hc],
   exact (lt_div_iff' hc').mp hB,
 end
@@ -221,12 +216,16 @@ to `c * t`. -/
 theorem tendsto_const_mul {a : ℕ → ℝ} {t : ℝ} (c : ℝ) (h : tendsto a t) :
   tendsto (λ n, c * a n) (c * t) :=
 begin
+  -- split into 3 cases 0 < c, c = 0 and c < 0
   rcases lt_trichotomy 0 c with (hc | rfl | hc),
+  -- c > 0
   { apply tendsto_pos_const_mul h hc },
+  -- c = 0 easy
   { convert tendsto_const 0,
       ext,
       simp,
     simp },
+  -- c < 0
   { apply tendsto_neg_const_mul h hc },
 end
 
@@ -235,9 +234,7 @@ to `t * c`. -/
 theorem tendsto_mul_const {a : ℕ → ℝ} {t : ℝ} (c : ℝ) (h : tendsto a t) :
   tendsto (λ n, a n * c) (t * c) :=
 begin
---  rw mul_comm,
-  simp_rw mul_comm,
-  rw mul_comm t,
+  simp_rw [mul_comm t, mul_comm _ c],
   exact tendsto_const_mul c h,
 end
 
@@ -245,10 +242,9 @@ end
 theorem tendsto_neg' {a : ℕ → ℝ} {t : ℝ} (ha : tendsto a t) :
   tendsto (λ n, - a n) (-t) :=
 begin
-  convert tendsto_const_mul (-1) ha,
-  ext,
-  simp,
-  simp,
+  convert tendsto_const_mul (-1) ha, -- nearly right but not *exactly* right; new goals are the differences
+  { ext, simp },
+  { simp },
 end
 
 /-- If `a(n)-b(n)` tends to `t` and `b(n)` tends to `u` then
@@ -257,16 +253,17 @@ theorem tendsto_of_tendsto_sub {a b : ℕ → ℝ} {t u : ℝ}
   (h1 : tendsto (λ n, a n - b n) t) (h2 : tendsto b u) :
   tendsto a (t+u) :=
 begin
-  convert tendsto_add h1 h2,
-  ext,simp,
+  convert tendsto_add h1 h2, -- reduces to an equality of functions
+  ext, -- apply functional extensionality
+  simp, -- `ring` would work too
 end
 
 /-- If `a(n)` tends to `t` then `a(n)-t` tends to `0`. -/
 theorem tendsto_sub_lim {a : ℕ → ℝ} {t : ℝ}
   (h : tendsto a t) : tendsto (λ n, a n - t) 0 :=
 begin
-  convert tendsto_add_const (-t) h,
-  simp,
+  convert tendsto_add_const (-t) h, -- nearly right
+  simp, -- last bit easy from simplifying rewrites.
 end
 
 /-- If `a(n)` and `b(n)` both tend to zero, then their product tends
@@ -286,11 +283,11 @@ begin
   cases hn with ha hb,
   specialize hBa n ha,
   specialize hBb n hb,
-  simp at *,
+  simp only [gt_iff_lt, sub_zero] at *, -- non-terminal simp was removed via `squeeze_simp`.
   rw abs_mul,
   have h0 : 0 ≤ |a n| := abs_nonneg (a n),
   have h1 : 0 ≤ |b n| := abs_nonneg (b n),
-  nlinarith,
+  nlinarith, -- general purpose non-linear inequality solver. 
 end
 
 /-- If `a(n)` tends to `t` and `b(n)` tends to `u` then
@@ -298,19 +295,23 @@ end
 theorem tendsto_mul (a b : ℕ → ℝ) (t u : ℝ) (ha : tendsto a t)
   (hb : tendsto b u) : tendsto (λ n, a n * b n) (t * u) :=
 begin
+  -- this method was harder than I thought because the algebra
+  -- under the binders was fiddly. I abstracted out random lemmas.
+  -- maybe if you went a different way you would have needed other
+  -- random lemmas instead of `tendsto_of_tendsto_sub`
   have h1 : tendsto (λ n, a n - t) 0 := tendsto_sub_lim ha,
   have h2 : tendsto (λ n, b n - u) 0 := tendsto_sub_lim hb,
   have h3 := tendsto_zero_mul_tendsto_zero h1 h2,
-  clear h1 h2,
-  simp [sub_mul, mul_sub] at h3,
+  clear h1 h2, -- these are no longer needed
+  simp only [sub_mul, mul_sub] at h3,
   replace ha := tendsto_mul_const u ha,
   replace ha := tendsto_sub_lim ha,
-  simp at ha,
+  simp only at ha,
   replace hb := tendsto_const_mul t hb,
   have h6 := tendsto_of_tendsto_sub h3 ha,
   clear h3 ha,
-  simp at h6,
+  simp only [zero_add] at h6,
   have h8 := tendsto_of_tendsto_sub h6 hb,
-  simp at h8,
-  exact h8,
+  clear h6 hb, -- tidying up after ourselves for no apparent reason
+  simpa [zero_add] using h8,
 end

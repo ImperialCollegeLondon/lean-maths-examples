@@ -11,6 +11,13 @@ We give the standard `ε`, `N` definition of the limit of a sequence
 and prove some theorems about them. The boss level: limit of
 products is product of limits.
 
+## Lean level
+
+You need to know the natural number game tactics and a few more too.
+Check out the `HINTS.md` file for more information about tactics which
+are useful for this sheet. I would say this sheet was of easy
+mathematical difficulty and medium lean difficulty.
+
 -/
 
 /-

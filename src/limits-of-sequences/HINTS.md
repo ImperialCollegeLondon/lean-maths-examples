@@ -8,6 +8,9 @@ The usual ones in the natural number game (intro, exact, cases, split, rw etc)
 
 `linarith` and `nlinarith`, tactics for solving linear and nonlinear inequalities.
 
+`convert` comes in handy a couple of times. If `h` and the goal are nearly but not quite definitionally equal,
+then `convert h` will spit out goals for where they differ.
+
 ## Library theorems used in the model answers
 
 It helps if you know the basic API for `abs`, a.k.a. `|x|`. Here are some examples.
@@ -17,6 +20,8 @@ It helps if you know the basic API for `abs`, a.k.a. `|x|`. Here are some exampl
 `abs_of_neg : a < 0 → |a| = -a`
 
 You can use the `rw` or `simp_rw` tactics to rewrite theorems about `abs`.
+
+I used `lt_trichotomy (a b : ℝ) : a < b ∨ a = b ∨ b < a` at some point.
 
 ## Maths hints
 

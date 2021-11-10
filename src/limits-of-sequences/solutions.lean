@@ -222,9 +222,9 @@ begin
   { apply tendsto_pos_const_mul h hc },
   -- c = 0 easy
   { convert tendsto_const 0,
-      ext,
-      simp,
-    simp },
+    { ext,
+      simp },
+    { simp } },
   -- c < 0
   { apply tendsto_neg_const_mul h hc },
 end
@@ -233,10 +233,8 @@ end
 to `t * c`. -/
 theorem tendsto_mul_const {a : ℕ → ℝ} {t : ℝ} (c : ℝ) (h : tendsto a t) :
   tendsto (λ n, a n * c) (t * c) :=
-begin
-  simp_rw [mul_comm t, mul_comm _ c],
-  exact tendsto_const_mul c h,
-end
+by simpa [mul_comm t, mul_comm _ c] using tendsto_const_mul c h
+-- `by tac` is the same as `begin tac end`, i.e. tactic blocks of length 1
 
 -- another proof of this
 theorem tendsto_neg' {a : ℕ → ℝ} {t : ℝ} (ha : tendsto a t) :
